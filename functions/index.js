@@ -17,7 +17,7 @@ const CLIENT_SECRET = "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";
 
 
 // This must be one of the "Authorized redirect URIs" in your Google Cloud Console
-const REDIRECT_URI = "https://schoolmaps-6a5f3.firebaseapp.com/redirect.html";
+const REDIRECT_URI = "https://googledrive-five.vercel.app/redirect.html";
 
 const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 
