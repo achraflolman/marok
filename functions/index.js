@@ -3,7 +3,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const { google } = require("googleapis");
-const cors = require('cors')({ origin: true }); // BELANGRIJK: Importeer de CORS middleware hier!
+const cors = require('cors'); // Alleen importeren, configuratie doen we per functie
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -58,20 +58,25 @@ async function getDriveClient(uid) {
     return google.drive({ version: "v3", auth: oauth2Client });
 }
 
-// --- Cloud Function 1: getGoogleAuthUrl (NU ALS onRequest MET HANDMATIGE CORS) ---
+// --- Cloud Function 1: getGoogleAuthUrl (NU ALS onRequest MET NOG ROBUUSTERE HANDMATIGE CORS) ---
 exports.getGoogleAuthUrl = functions.https.onRequest((req, res) => {
-    // Gebruik de CORS middleware
-    cors(req, res, async () => {
+    // Stel de CORS opties expliciet in
+    const corsOptions = {
+        origin: "https://googledrive-five.vercel.app", // Specifieke origin van je frontend
+        methods: "GET,POST,OPTIONS", // Toestaan van GET, POST, en OPTIONS (voor preflight)
+        allowedHeaders: ["Content-Type", "Authorization", "X-Firebase-AppCheck", "X-Client-Version"], // Belangrijke headers
+        credentials: true, // Indien je cookies/auth headers verstuurt
+    };
+
+    cors(corsOptions)(req, res, async () => {
         // userId wordt nu als query parameter in de URL meegestuurd
         const userId = req.query.userId; 
 
         if (!userId) {
+            // Reageer correct met CORS headers, zelfs bij een fout
             res.status(401).send('Authenticatie vereist: userId ontbreekt in aanvraag.');
             return;
         }
-
-        // We valideren de Firebase Auth status niet direct in onRequest,
-        // maar de 'state' parameter zal de UID bevatten voor de volgende stap (storeGoogleTokens).
 
         const authUrl = oauth2Client.generateAuthUrl({
             access_type: "offline",
