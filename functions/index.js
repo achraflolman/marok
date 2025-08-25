@@ -3,6 +3,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const { google } = require("googleapis");
+const cors = require('cors')({ origin: true }); // BELANGRIJK: Importeer de CORS middleware hier!
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -16,7 +17,6 @@ const CLIENT_ID = "336929063264-1tnha4m5je3tmbn7gckre2mdc9rvmak3.apps.googleuser
 const CLIENT_SECRET = "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";
 // --- EINDE VAN ONVEILIGE SECTIE ---
 
-
 // This must be one of the "Authorized redirect URIs" in your Google Cloud Console
 // EN exact overeenkomen met je Vercel app's redirect.html pagina.
 const REDIRECT_URI = "https://googledrive-five.vercel.app/redirect.html"; 
@@ -26,7 +26,7 @@ const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_U
 const SCOPES = [
     "https://www.googleapis.com/auth/drive.file",
     "https://www.googleapis.com/auth/userinfo.profile",
-    "https://www.googleapis.com/auth/userinfo.email" // Voeg email scope toe voor potentieel gebruik
+    "https://www.googleapis.com/auth/userinfo.email"
 ];
 
 const SCHOOLMAPS_FOLDER_NAME = "Schoolmaps Files";
@@ -49,27 +49,45 @@ async function getDriveClient(uid) {
     const tokens = userPrivateDoc.data();
     oauth2Client.setCredentials({ refresh_token: tokens.refresh_token });
 
-    // Refresh the access token to ensure it's valid
-    // Soms geeft getToken al de vernieuwde access_token, maar een expliciete getAccessToken is veiliger.
     const { token: accessToken } = await oauth2Client.getAccessToken();
     oauth2Client.setCredentials({
         access_token: accessToken,
-        refresh_token: tokens.refresh_token, // Zorg dat de refresh token behouden blijft
+        refresh_token: tokens.refresh_token,
     });
 
     return google.drive({ version: "v3", auth: oauth2Client });
 }
 
-exports.getGoogleAuthUrl = functions.https.onCall(async (data, context) => {
-    requireAuth(context);
-    const authUrl = oauth2Client.generateAuthUrl({
-        access_type: "offline",
-        prompt: "consent",
-        scope: SCOPES.join(' '), // FIX: SCOPES moet een spatie-gescheiden string zijn
-        state: context.auth.uid // Voeg state toe om de gebruiker te identificeren na redirect
+// --- Cloud Function 1: getGoogleAuthUrl (NU ALS onRequest MET HANDMATIGE CORS) ---
+exports.getGoogleAuthUrl = functions.https.onRequest((req, res) => {
+    // Gebruik de CORS middleware
+    cors(req, res, async () => {
+        // userId wordt nu als query parameter in de URL meegestuurd
+        const userId = req.query.userId; 
+
+        if (!userId) {
+            res.status(401).send('Authenticatie vereist: userId ontbreekt in aanvraag.');
+            return;
+        }
+
+        // We valideren de Firebase Auth status niet direct in onRequest,
+        // maar de 'state' parameter zal de UID bevatten voor de volgende stap (storeGoogleTokens).
+
+        const authUrl = oauth2Client.generateAuthUrl({
+            access_type: "offline",
+            prompt: "consent",
+            scope: SCOPES.join(' '), 
+            state: userId // Stuur de Firebase user ID mee als 'state'
+        });
+
+        // Stuur de URL terug naar de frontend
+        res.status(200).send({ url: authUrl });
     });
-    return { url: authUrl };
 });
+
+
+// --- De volgende functies blijven https.onCall ---
+// (Deze zouden normaliter CORS automatisch moeten afhandelen via Firebase Auth geautoriseerde domeinen)
 
 exports.storeGoogleTokens = functions.https.onCall(async (data, context) => {
     const uid = requireAuth(context);
@@ -90,8 +108,7 @@ exports.storeGoogleTokens = functions.https.onCall(async (data, context) => {
     await privateDataRef.set({ refresh_token: refresh_token });
 
     const publicUserRef = db.collection(`artifacts/${appId}/public/data/users`).doc(uid);
-    // FIX: Gebruik set met merge om te zorgen dat het document bestaat of alleen isDriveConnected update
-    await publicUserRef.set({ isDriveConnected: true }, { merge: true }); 
+    await publicUserRef.set({ isDriveConnected: true }, { merge: true });
 
     return { success: true, message: "Google Drive succesvol gekoppeld." };
 });
@@ -100,13 +117,11 @@ exports.disconnectGoogleDrive = functions.https.onCall(async (data, context) => 
     const uid = requireAuth(context);
     const appId = admin.app().options.appId;
 
-    // Revoke the token with Google
     const userPrivateDoc = await db.collection(`artifacts/${appId}/users/${uid}/private/google`).doc("tokens").get();
     if (userPrivateDoc.exists) {
         const tokens = userPrivateDoc.data();
         if (tokens.refresh_token) {
            try {
-             // Dit kan mislukken als token al ongeldig is, maar we gaan toch door
              await oauth2Client.revokeToken(tokens.refresh_token);
            } catch(e) {
              console.warn(`Kon token niet intrekken voor gebruiker ${uid}`, e.message);
@@ -118,7 +133,6 @@ exports.disconnectGoogleDrive = functions.https.onCall(async (data, context) => 
     const publicUserRef = db.collection(`artifacts/${appId}/public/data/users`).doc(uid);
 
     await privateDataRef.delete();
-    // FIX: Gebruik set met merge om te zorgen dat het document bestaat of alleen isDriveConnected update
     await publicUserRef.set({ isDriveConnected: false }, { merge: true });
 
     return { success: true, message: "Google Drive ontkoppeld." };
@@ -204,7 +218,7 @@ exports.deleteFileFromDrive = functions.https.onCall(async (data, context) => {
         const drive = await getDriveClient(uid);
         await drive.files.delete({ fileId: driveFileId });
     } catch (error) {
-        console.error('Drive file deletion error:', error);
+        console.error('Drive bestand verwijderingsfout:', error);
         if (error.code !== 404) {
             throw new functions.https.HttpsError('internal', 'Kan bestand niet verwijderen van Google Drive.', { details: error.message });
         }
@@ -215,7 +229,7 @@ exports.deleteFileFromDrive = functions.https.onCall(async (data, context) => {
         await db.collection(`artifacts/${appId}/public/data/files`).doc(fileId).delete();
         return { success: true };
     } catch(dbError) {
-        console.error('Firestore file deletion error:', dbError);
+        console.error('Firestore bestand verwijderingsfout:', dbError);
         throw new functions.https.HttpsError('internal', 'Kan bestand niet verwijderen uit database.', { details: dbError.message });
     }
 });
