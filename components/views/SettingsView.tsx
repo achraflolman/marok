@@ -40,7 +40,6 @@ const SettingsView = ({ t, getThemeClasses, language, setLanguage, themeColor, s
 
     try {
       setMessage('Google Drive koppelen...');
-      // BELANGRIJK: Hier wordt getGoogleAuthUrlDirect aangeroepen met de userId
       const result = await getGoogleAuthUrlDirect(user.uid); 
       const authUrl = result.url; // De URL komt nu als 'url' van de onRequest functie
 
@@ -58,7 +57,6 @@ const SettingsView = ({ t, getThemeClasses, language, setLanguage, themeColor, s
         if (data && data.type === 'googleAuthCode' && data.code && data.state === user.uid) {
           try {
             setMessage('Autorisatiecode ontvangen, tokens opslaan...');
-            // Gebruik storeGoogleTokensCallable zoals gedefinieerd in services/firebase.ts
             await storeGoogleTokensCallable({ code: data.code }); 
             setIsGoogleDriveLinked(true);
             setMessage('Google Drive succesvol gekoppeld!');
@@ -101,7 +99,6 @@ const SettingsView = ({ t, getThemeClasses, language, setLanguage, themeColor, s
     }
     setMessage('Google Drive ontkoppelen...');
     try {
-      // Roep disconnectGoogleDriveCallable aan
       await disconnectGoogleDriveCallable(); 
       setIsGoogleDriveLinked(false);
       setMessage('Google Drive succesvol ontkoppeld.');
@@ -130,17 +127,19 @@ const SettingsView = ({ t, getThemeClasses, language, setLanguage, themeColor, s
             </button>
           </div>
         ) : (
-          <div className="flex flex-col items-center">
-            <p className="text-gray-700 text-lg mb-4 text-center">
-              Koppel je Google Drive account om documenten (PDF, Word, PowerPoint) op te slaan en te beheren via Schoolmaps.
-            </p>
-            <button
-              onClick={handleLinkGoogleDrive}
-              className={`${getThemeClasses('bg', 'bg-blue-600')} text-white px-6 py-3 rounded-full text-lg font-semibold shadow-lg hover:bg-blue-700 transition-colors duration-300 ease-in-out`}
-            >
-              Koppel Google Drive
-            </button>
-          </>
+          // <div className="flex flex-col items-center"> <-- De fragment-tag hierboven is nu verwijderd.
+            <div className="flex flex-col items-center">
+                <p className="text-gray-700 text-lg mb-4 text-center">
+                    Koppel je Google Drive account om documenten (PDF, Word, PowerPoint) op te slaan en te beheren via Schoolmaps.
+                </p>
+                <button
+                    onClick={handleLinkGoogleDrive}
+                    className={`${getThemeClasses('bg', 'bg-blue-600')} text-white px-6 py-3 rounded-full text-lg font-semibold shadow-lg hover:bg-blue-700 transition-colors duration-300 ease-in-out`}
+                >
+                    Koppel Google Drive
+                </button>
+            </div>
+          // ) <-- En hieronder is de sluitende fragment-tag verwijderd.
         )}
         {message && <p className={`mt-4 text-center text-base ${message.startsWith('Fout') ? 'text-red-500' : 'text-gray-700'}`}>{message}</p>}
       </div>
