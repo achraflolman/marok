@@ -59,22 +59,23 @@ export {
 export const appId = firebaseConfig.projectId; 
 
 // --- Callable Cloud Functions (blijven httpsCallable) ---
+// getGoogleAuthUrlCallable zou HIER NIET MEER MOETEN STAAN
 export const storeGoogleTokensCallable = httpsCallable(functions, 'storeGoogleTokens');
 export const disconnectGoogleDriveCallable = httpsCallable(functions, 'disconnectGoogleDrive');
 export const uploadFileToDriveCallable = httpsCallable(functions, 'uploadFileToDrive');
 export const deleteFileFromDriveCallable = httpsCallable(functions, 'deleteFileFromDrive');
 
 
-// --- NIEUW: Directe aanroep voor getGoogleAuthUrl (onRequest functie) ---
+// --- NIEUW: Directe aanroep voor getGoogleAuthUrl (onRequest functie, stuurt GET) ---
 export const getGoogleAuthUrlDirect = async (userId: string) => {
     // Dit is de URL van je gedeployde onRequest functie.
     // De naam van de functie is 'getGoogleAuthUrl' en de regio is 'us-central1' (standaard).
     const functionUrl = `https://us-central1-${firebaseConfig.projectId}.cloudfunctions.net/getGoogleAuthUrl?userId=${userId}`;
 
     try {
-        const response = await fetch(functionUrl);
+        const response = await fetch(functionUrl); // Dit doet standaard een GET-request
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: "Unknown error" })); // Probeer JSON te parsen, fallback
+            const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
             throw new Error(errorData.message || `Fout bij ophalen autorisatie-URL: ${response.statusText}`);
         }
         const data = await response.json();
