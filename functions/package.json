@@ -10,13 +10,13 @@
     "logs": "firebase functions:log"
   },
   "engines": {
-    "node": "18" // Of jouw Node.js versie
+    "node": "18" 
   },
   "main": "index.js",
   "dependencies": {
-    "firebase-admin": "^11.11.0", // Of jouw versie
-    "firebase-functions": "^4.5.0", // Of jouw versie
-    "googleapis": "^128.0.0", // Of jouw versie
+    "firebase-admin": "^11.11.0", 
+    "firebase-functions": "^4.5.0", 
+    "googleapis": "^128.0.0", 
     "cors": "^2.8.5" // <<< ZORG DAT DEZE REGEL ERIN STAAT!
   },
   "devDependencies": {
