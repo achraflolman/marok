@@ -40,7 +40,7 @@ const SettingsView = ({ t, getThemeClasses, language, setLanguage, themeColor, s
 
     try {
       setMessage('Google Drive koppelen...');
-      // BELANGRIJK: Nu roepen we getGoogleAuthUrlDirect aan met de userId
+      // BELANGRIJK: Hier wordt getGoogleAuthUrlDirect aangeroepen met de userId
       const result = await getGoogleAuthUrlDirect(user.uid); 
       const authUrl = result.url; // De URL komt nu als 'url' van de onRequest functie
 
@@ -102,8 +102,6 @@ const SettingsView = ({ t, getThemeClasses, language, setLanguage, themeColor, s
     setMessage('Google Drive ontkoppelen...');
     try {
       // Roep disconnectGoogleDriveCallable aan
-      // Deze functie moet nog geïmplementeerd/geëxporteerd worden in services/firebase.ts
-      // en in functions/index.js
       await disconnectGoogleDriveCallable(); 
       setIsGoogleDriveLinked(false);
       setMessage('Google Drive succesvol ontkoppeld.');
