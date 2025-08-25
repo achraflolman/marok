@@ -1,78 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Authorizing...</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f0f2f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      color: #333;
-    }
-    .container {
-      text-align: center;
-      padding: 2rem;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    .spinner {
-      border: 4px solid rgba(0,0,0,0.1);
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border-left-color: #09f;
-      animation: spin 1s ease infinite;
-      margin: 0 auto 1rem;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
+    <title>Google Drive Authorisatie</title>
 </head>
 <body>
-  <div class="container">
-    <div class="spinner"></div>
-    <h1>Please wait...</h1>
-    <p>Returning to Schoolmaps.</p>
-  </div>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // These are the domains where your app can be hosted.
-      // This is a security measure to ensure the OAuth code is only sent to trusted domains.
-      const allowedOrigins = [
-        'http://localhost:8080', // Local development server
-        'https://schoolmaps-6a5f3.web.app', // Firebase Hosting
-        'https://schoolmaps-6a5f3.firebaseapp.com', // Firebase Hosting
-        'https://googledrive-five.vercel.app' // Vercel deployment
-      ];
+    <p>Autorisatie in behandeling...</p>
+    <script>
+        // Deze script zal de autorisatiecode uitlezen en terugsturen naar het hoofdvenster.
+        // Zorg ervoor dat dit bestand exact overeenkomt met de REDIRECT_URI in je Cloud Function.
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-      
-      if (window.opener && code) {
-        const payload = {
-          type: 'google-oauth-code',
-          code: code
-        };
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const state = params.get('state'); // De user ID die we hebben meegestuurd
 
-        // Try to post to the opener only if its origin is in the allowed list.
-        if (allowedOrigins.includes(window.opener.origin)) {
-          window.opener.postMessage(payload, window.opener.origin);
+        if (code && state) {
+            // Stuur de code en state (userId) terug naar het venster dat de pop-up opende.
+            // Zorg ervoor dat window.opener bestaat en een postMessage listener heeft.
+            if (window.opener) {
+                window.opener.postMessage({
+                    type: 'googleAuthCode',
+                    code: code,
+                    state: state // Stuur de state (userId) terug
+                }, window.location.origin); // BELANGRIJK: specificeer origin voor veiligheid
+            }
+            document.body.innerHTML = "<p>Google Drive is succesvol gekoppeld! Je kunt dit venster nu sluiten.</p>";
         } else {
-          console.warn(`Opener origin (${window.opener.origin}) not in allowed list. The OAuth code will not be sent.`);
+            document.body.innerHTML = "<p>Er is een fout opgetreden tijdens de Google Drive autorisatie. Geen code ontvangen.</p>";
         }
-      }
-      
-      // Close the window automatically after a short delay
-      // to ensure the message has time to be sent.
-      setTimeout(() => window.close(), 500);
-    });
-  </script>
+    </script>
 </body>
 </html>
