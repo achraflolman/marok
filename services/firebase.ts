@@ -1,14 +1,14 @@
+// services/firebase.ts
 
-
-import firebase from "firebase/compat/app";
-import "firebase/compat/auth";
-import "firebase/compat/firestore";
-import "firebase/compat/storage";
-import "firebase/compat/functions";
-
+// BELANGRIJK: Gebruik modulaire imports voor Firebase SDK v9+
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth, EmailAuthProvider, onAuthStateChanged, signOut, reauthenticateWithCredential, deleteUser, sendPasswordResetEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { getFirestore, Timestamp, arrayUnion, increment, serverTimestamp, enablePersistence } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAQf8SV7qf8FQkh7ayvRlBPR1-fRJ6d3Ks",
+  apiKey: "AIzaSyAQf8SV7qf8FQkh7ayvRlBPR1-fRJ6d3Ks", // Jouw API Key
   authDomain: "schoolmaps-6a5f3.firebaseapp.com",
   projectId: "schoolmaps-6a5f3",
   storageBucket: "schoolmaps-6a5f3.appspot.com",
@@ -17,93 +17,70 @@ const firebaseConfig = {
   measurementId: "G-8KKCCFBFSL"
 };
 
-export const appId = firebaseConfig.appId;
+// Initialiseer Firebase app
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Firebase
-const app = !firebase.apps.length ? firebase.initializeApp(firebaseConfig) : firebase.app();
+// Initialiseer services op de modulaire manier
+export const auth = getAuth(app); 
+export const db = getFirestore(app); 
+export const storage = getStorage(app); 
+export const functions = getFunctions(app); 
 
-
-// Initialize services
-export const auth = firebase.auth();
-export const db = firebase.firestore();
-export const storage = firebase.storage();
-const functions = firebase.functions();
-
+// Firestore persistence (alleen als je het echt wilt gebruiken)
 try {
-  db.enablePersistence({ experimentalForceOwningTab: true });
-} catch (err) {
-  if ((err as any).code === 'failed-precondition') {
-    // Multiple tabs open, persistence can only be enabled
-    // in one tab at a a time.
-  } else if ((err as any).code === 'unimplemented') {
-    // The current browser does not support all of the
-    // features required to enable persistence
+  enablePersistence(db, { experimentalForceOwningTab: true });
+} catch (err: any) {
+  if (err.code === 'failed-precondition') {
+    console.warn("Firestore persistence could not be enabled: Multiple tabs open.");
+  } else if (err.code === 'unimplemented') {
+    console.warn("Firestore persistence could not be enabled: Browser does not support all required features.");
+  } else {
+    console.error("Firestore persistence error:", err);
   }
 }
 
-
-// Export Firebase features
-export const EmailAuthProvider = firebase.auth.EmailAuthProvider;
-
-export const onAuthStateChanged = (
-    authInstance: firebase.auth.Auth, 
-    callback: (user: firebase.User | null) => void
-) => {
-    return authInstance.onAuthStateChanged(callback);
+// Exporteer Firebase gerelateerde functies en types direct
+export {
+    EmailAuthProvider,
+    onAuthStateChanged,
+    sendPasswordResetEmail,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    reauthenticateWithCredential,
+    deleteUser,
+    sendEmailVerification,
+    Timestamp,
+    arrayUnion,
+    increment,
+    serverTimestamp
 };
 
-export const sendPasswordResetEmail = (
-    authInstance: firebase.auth.Auth, 
-    email: string
-) => {
-    return authInstance.sendPasswordResetEmail(email);
+export const appId = firebaseConfig.projectId; 
+
+// --- Callable Cloud Functions (blijven httpsCallable) ---
+export const storeGoogleTokensCallable = httpsCallable(functions, 'storeGoogleTokens');
+export const disconnectGoogleDriveCallable = httpsCallable(functions, 'disconnectGoogleDrive');
+export const uploadFileToDriveCallable = httpsCallable(functions, 'uploadFileToDrive');
+export const deleteFileFromDriveCallable = httpsCallable(functions, 'deleteFileFromDrive');
+
+
+// --- NIEUW: Directe aanroep voor getGoogleAuthUrl (onRequest functie) ---
+export const getGoogleAuthUrlDirect = async (userId: string) => {
+    // Dit is de URL van je gedeployde onRequest functie.
+    // De naam van de functie is 'getGoogleAuthUrl' en de regio is 'us-central1' (standaard).
+    const functionUrl = `https://us-central1-${firebaseConfig.projectId}.cloudfunctions.net/getGoogleAuthUrl?userId=${userId}`;
+
+    try {
+        const response = await fetch(functionUrl);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: "Unknown error" })); // Probeer JSON te parsen, fallback
+            throw new Error(errorData.message || `Fout bij ophalen autorisatie-URL: ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("Fout bij directe aanroep getGoogleAuthUrl:", error);
+        throw error;
+    }
 };
-
-export const createUserWithEmailAndPassword = (
-    authInstance: firebase.auth.Auth, 
-    email: string, 
-    password: string
-) => {
-    return authInstance.createUserWithEmailAndPassword(email, password);
-};
-
-export const signInWithEmailAndPassword = (
-    authInstance: firebase.auth.Auth, 
-    email: string, 
-    password: string
-) => {
-    return authInstance.signInWithEmailAndPassword(email, password);
-};
-
-export const signOut = (authInstance: firebase.auth.Auth) => {
-    return authInstance.signOut();
-};
-
-export const reauthenticateWithCredential = (
-    user: firebase.User, 
-    credential: firebase.auth.AuthCredential
-) => {
-    return user.reauthenticateWithCredential(credential);
-};
-
-export const deleteUser = (user: firebase.User) => {
-    return user.delete();
-};
-
-export const sendEmailVerification = (user: firebase.User) => {
-    return user.sendEmailVerification();
-};
-
-
-export const Timestamp = firebase.firestore.Timestamp;
-export const arrayUnion = firebase.firestore.FieldValue.arrayUnion;
-export const increment = firebase.firestore.FieldValue.increment;
-export const serverTimestamp = firebase.firestore.FieldValue.serverTimestamp;
-
-
-// Functions
-export const getGoogleAuthUrl = functions.httpsCallable('getGoogleAuthUrl');
-export const storeGoogleTokens = functions.httpsCallable('storeGoogleTokens');
-export const disconnectGoogleDrive = functions.httpsCallable('disconnectGoogleDrive');
-export const uploadFileToDrive = functions.httpsCallable('uploadFileToDrive');
-export const deleteFileFromDrive = functions.httpsCallable('deleteFileFromDrive');
