@@ -1,5 +1,4 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-// Voeg createUserWithEmailAndPassword en signInWithEmailAndPassword toe aan de import
 import { getAuth, EmailAuthProvider, onAuthStateChanged, signOut, reauthenticateWithCredential, deleteUser, sendPasswordResetEmail, sendEmailVerification, updateProfile, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, Timestamp, arrayUnion, increment, serverTimestamp, collection, doc, setDoc, getDoc, updateDoc, query, where, orderBy, limit, getDocs, deleteDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
@@ -28,6 +27,39 @@ if (typeof __initial_auth_token !== 'undefined') {
     });
 }
 
+/**
+ * Uploadt een bestand naar Firebase Storage.
+ * @param file Het bestand dat moet worden geüpload.
+ * @param path Het pad in Storage waar het bestand moet worden opgeslagen (bijv. 'uploads/userId/filename.ext').
+ * @returns Een Promise die oplost met de download-URL van het geüploade bestand.
+ */
+const uploadFileToDrive = async (file: File, path: string): Promise<string> => {
+    try {
+        const storageRef = ref(storage, path);
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        return downloadURL;
+    } catch (error) {
+        console.error("Fout bij het uploaden van bestand:", error);
+        throw error; // Hergooi de fout zodat de aanroepende code deze kan afhandelen
+    }
+};
+
+/**
+ * Verwijdert een bestand uit Firebase Storage.
+ * @param filePath Het volledige pad naar het bestand in Storage (bijv. 'uploads/userId/filename.ext').
+ * @returns Een Promise die oplost zodra het bestand is verwijderd.
+ */
+const deleteFileFromDrive = async (filePath: string): Promise<void> => {
+    try {
+        const fileRef = ref(storage, filePath);
+        await deleteObject(fileRef);
+        console.log(`Bestand succesvol verwijderd: ${filePath}`);
+    } catch (error) {
+        console.error("Fout bij het verwijderen van bestand:", error);
+        throw error; // Hergooi de fout zodat de aanroepende code deze kan afhandelen
+    }
+};
 
 // Exporteer de geïnitialiseerde services en de noodzakelijke Firebase SDK functies
 export {
@@ -45,7 +77,6 @@ export {
     sendPasswordResetEmail,
     sendEmailVerification,
     updateProfile,
-    // Voeg de ontbrekende authenticatiefuncties toe
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     // Firebase Firestore gerelateerde exports
@@ -69,7 +100,9 @@ export {
     uploadBytes,
     getDownloadURL,
     deleteObject,
+    // Voeg de nieuwe Storage-functies toe
+    uploadFileToDrive,
+    deleteFileFromDrive,
     // Firebase Functions gerelateerde exports
     httpsCallable
 };
-
