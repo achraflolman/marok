@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, EmailAuthProvider, onAuthStateChanged, signOut, reauthenticateWithCredential, deleteUser, sendPasswordResetEmail, sendEmailVerification, updateProfile } from 'firebase/auth';
-// 'enablePersistence' is verwijderd uit deze importregel
+// Voeg createUserWithEmailAndPassword en signInWithEmailAndPassword toe aan de import
+import { getAuth, EmailAuthProvider, onAuthStateChanged, signOut, reauthenticateWithCredential, deleteUser, sendPasswordResetEmail, sendEmailVerification, updateProfile, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, Timestamp, arrayUnion, increment, serverTimestamp, collection, doc, setDoc, getDoc, updateDoc, query, where, orderBy, limit, getDocs, deleteDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -45,6 +45,9 @@ export {
     sendPasswordResetEmail,
     sendEmailVerification,
     updateProfile,
+    // Voeg de ontbrekende authenticatiefuncties toe
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
     // Firebase Firestore gerelateerde exports
     Timestamp,
     arrayUnion,
