@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Menu, LogOut, Camera, Bell, Flame, Loader2 } from 'lucide-react';
 import type { Timestamp as FirebaseTimestamp } from 'firebase/compat/firestore';
@@ -21,7 +17,7 @@ import AuthView from './components/views/AuthView';
 import HomeView from './components/views/HomeView';
 import SubjectView from './components/views/SubjectView';
 import CalendarView from './components/views/CalendarView';
-import SettingsView from './components/views/SettingsView';
+import SettingsView from './components/views/SettingsView'; // Importeer de SettingsView
 import InfoView from './components/views/InfoView';
 import FaqView from './components/views/FaqView';
 import ToolsView from './components/views/ToolsView';
@@ -51,13 +47,13 @@ const LoadingScreen: React.FC<{ getThemeClasses: (variant: string) => string }> 
             <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0492C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentColor"/>
           </svg>
        </div>
-   </div>
+    </div>
 );
 
 
 // --- Main App Layout for Authenticated Users (Now largely stateless) ---
 const MainAppLayout: React.FC<{
-    user: AppUser;
+    user: AppUser | null; // Aangepast naar AppUser | null, omdat App.tsx user als null kan hebben
     t: (key: string, replacements?: any) => string;
     tSubject: (key: string) => string;
     getThemeClasses: (variant: string) => string;
@@ -112,7 +108,7 @@ const MainAppLayout: React.FC<{
     language, setLanguage, themeColor, setThemeColor, fontFamily, setFontFamily, onProfileUpdate, onDeleteAccountRequest, onCleanupAccountRequest, closeAppModal, notifications, unreadCount, showBroadcast,
     focusMinutes, setFocusMinutes, breakMinutes, setBreakMinutes, timerMode, setTimerMode, timeLeft, setTimeLeft, isTimerActive, setIsTimerActive, selectedTaskForTimer, setSelectedTaskForTimer
 }) => {
-    
+
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -120,10 +116,10 @@ const MainAppLayout: React.FC<{
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node) && isSidebarOpen) {
-                 const hamburgerButton = document.getElementById('hamburger-menu');
-                 if(hamburgerButton && !hamburgerButton.contains(event.target as Node)) {
-                    setIsSidebarOpen(false);
-                 }
+                   const hamburgerButton = document.getElementById('hamburger-menu');
+                   if(hamburgerButton && !hamburgerButton.contains(event.target as Node)) {
+                     setIsSidebarOpen(false);
+                   }
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -132,15 +128,16 @@ const MainAppLayout: React.FC<{
         };
     }, [isSidebarOpen]);
 
-    const toolsViewProps = { t, getThemeClasses, showAppModal, closeAppModal, userId: user.uid, user, tSubject, copyTextToClipboard, focusMinutes, setFocusMinutes, breakMinutes, setBreakMinutes, timerMode, setTimerMode, timeLeft, setTimeLeft, isTimerActive, setIsTimerActive, selectedTaskForTimer, setSelectedTaskForTimer };
+    const toolsViewProps = { t, getThemeClasses, showAppModal, closeAppModal, userId: user?.uid, user, tSubject, copyTextToClipboard, focusMinutes, setFocusMinutes, breakMinutes, setBreakMinutes, timerMode, setTimerMode, timeLeft, setTimeLeft, isTimerActive, setIsTimerActive, selectedTaskForTimer, setSelectedTaskForTimer };
 
     const mainContent = (
         <div className="animate-fade-in">
             {currentView === 'home' && !currentSubject && <HomeView {...{ user, setCurrentView, t, getThemeClasses, tSubject, setCurrentSubject, recentFiles, userEvents, language }} />}
-            {currentView === 'home' && currentSubject && <SubjectView {...{ user, currentSubject, subjectFiles, setCurrentSubject, t, tSubject, getThemeClasses, showAppModal, userId: user.uid, searchQuery, setSearchQuery, copyTextToClipboard }} />}
-            {currentView === 'calendar' && <CalendarView {...{ userEvents, t, getThemeClasses, tSubject, language, showAppModal, userId: user.uid, user }} />}
-            {currentView === 'notes' && <NotesView {...{ userId: user.uid, user, t, tSubject, getThemeClasses, showAppModal }} />}
+            {currentView === 'home' && currentSubject && <SubjectView {...{ user, currentSubject, subjectFiles, setCurrentSubject, t, tSubject, getThemeClasses, showAppModal, userId: user?.uid, searchQuery, setSearchQuery, copyTextToClipboard }} />}
+            {currentView === 'calendar' && <CalendarView {...{ userEvents, t, getThemeClasses, tSubject, language, showAppModal, userId: user?.uid, user }} />}
+            {currentView === 'notes' && <NotesView {...{ userId: user?.uid, user, t, tSubject, getThemeClasses, showAppModal }} />}
             {currentView === 'tools' && <ToolsView {...toolsViewProps} />}
+            {/* Hier geven we de 'user' prop door aan SettingsView */}
             {currentView === 'settings' && <SettingsView {...{ user, t, getThemeClasses, language, setLanguage, themeColor, setThemeColor, showAppModal, tSubject, setCurrentView, onProfileUpdate, fontFamily, setFontFamily, onDeleteAccountRequest, onCleanupAccountRequest }} />}
             {currentView === 'notifications' && <NotificationsView {...{ user, t, getThemeClasses, notifications, setCurrentView, onProfileUpdate, showBroadcast, showAppModal }} />}
             {currentView === 'feedback' && <FeedbackView {...{ user, t, getThemeClasses, setCurrentView }} />}
@@ -148,7 +145,7 @@ const MainAppLayout: React.FC<{
             {currentView === 'faq' && <FaqView {...{ t, getThemeClasses, setCurrentView }} />}
         </div>
     );
-    
+
     return (
         <div className={`flex h-screen w-full`}>
              <Sidebar {...{ user, isSidebarOpen, setIsSidebarOpen, sidebarRef, t, getThemeClasses, setCurrentView, currentView, currentSubject, setIsProfilePicModalOpen }} />
@@ -160,7 +157,7 @@ const MainAppLayout: React.FC<{
                         </button>
                          <h1 onClick={handleGoHome} className={`text-2xl font-bold ${getThemeClasses('text-logo')} cursor-pointer transition-transform hover:scale-105 active:scale-100`}>
                             Schoolmaps
-                         </h1>
+                          </h1>
                         <div className="flex items-center gap-2">
                            {isTimerActive && (
                                 <button type="button" onClick={() => setCurrentView('tools')} className={`p-2 rounded-lg font-mono text-sm font-bold ${getThemeClasses('text')} bg-gray-100 hover:bg-gray-200`}>
@@ -283,7 +280,7 @@ const ReauthModal: React.FC<{
             setIsVerifying(false);
         }
     };
-    
+
     useEffect(() => {
         if (!isOpen) {
             setPassword('');
@@ -295,8 +292,8 @@ const ReauthModal: React.FC<{
     if (!isOpen) return null;
 
     return (
-         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 animate-fade-in" onClick={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full transform transition-all duration-300 scale-100 animate-scale-up" onClick={e => e.stopPropagation()}>
+           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 animate-fade-in" onClick={onClose}>
+             <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full transform transition-all duration-300 scale-100 animate-scale-up" onClick={e => e.stopPropagation()}>
                 <h3 className="text-xl font-bold mb-2 text-gray-800">{title || t('reauth_modal_title')}</h3>
                 <p className="text-gray-600 mb-4">{description || t('reauth_modal_description')}</p>
                 <form onSubmit={handleConfirm}>
@@ -342,7 +339,7 @@ const App: React.FC = () => {
     const [selectedUserForDetail, setSelectedUserForDetail] = useState<AppUser | null>(null);
     const [isPinVerificationModalOpen, setIsPinVerificationModalOpen] = useState(false);
     const [verificationSkipped, setVerificationSkipped] = useState(sessionStorage.getItem('schoolmaps_verification_skipped') === 'true');
-    
+
     // Admin specific state
     const [adminSettings, setAdminSettings] = useState<AdminSettings | null>(null);
     const [isPinVerified, setIsPinVerified] = useState(false);
@@ -383,7 +380,7 @@ const App: React.FC = () => {
         teal: { bg: 'bg-teal-500', 'hover-bg': 'hover:bg-teal-600', text: 'text-teal-700', 'text-strong': 'text-teal-800', border: 'border-teal-500', ring: 'focus:ring-teal-500', 'bg-light': 'bg-teal-50', 'border-light': 'border-teal-100', 'text-logo': 'text-teal-600' },
         amber: { bg: 'bg-amber-500', 'hover-bg': 'hover:bg-amber-600', text: 'text-amber-700', 'text-strong': 'text-amber-800', border: 'border-amber-500', ring: 'focus:ring-amber-500', 'bg-light': 'bg-amber-50', 'border-light': 'border-amber-100', 'text-logo': 'text-amber-600' }
     };
-    
+
     const fontClasses: { [key: string]: string } = {
         inter: 'font-inter',
         poppins: 'font-poppins',
@@ -396,7 +393,7 @@ const App: React.FC = () => {
         const currentTheme = isAdmin ? adminSettings?.themePreference : themeColor;
         return (themeStyles[currentTheme || 'emerald']?.[variant]) || themeStyles['emerald'][variant] || '';
     }, [themeColor, isAdmin, adminSettings]);
-    
+
     const getAuthThemeClasses = useCallback((variant: string): string => {
         // Auth view should always be the default green theme
         return (themeStyles['emerald']?.[variant]) || '';
@@ -427,7 +424,7 @@ const App: React.FC = () => {
             setIsBroadcastModalOpen(true);
         }
     }, []);
-    
+
     const handleUserDetailClick = (user: AppUser) => {
         setSelectedUserForDetail(user);
         setIsUserDetailModalOpen(true);
@@ -486,12 +483,12 @@ const App: React.FC = () => {
         if (timerAudioRef.current) {
             timerAudioRef.current.play().catch(e => console.error("Error playing sound:", e));
         }
-        
+
         showAppModal({ text: t(completedMode === 'focus' ? 'focus_session_complete' : 'break_session_complete')});
-        
+
         const newMode = completedMode === 'focus' ? 'break' : 'focus';
         setTimerMode(newMode);
-        setIsTimerActive(false); 
+        setIsTimerActive(false);
     }, [showAppModal, t]);
 
     useEffect(() => {
@@ -512,7 +509,7 @@ const App: React.FC = () => {
         }
     }, [focusMinutes, breakMinutes, timerMode, isTimerActive]);
 
-    
+
     const handleLogout = useCallback(() => {
         showAppModal({
             text: t('confirm_logout'),
@@ -553,7 +550,7 @@ const App: React.FC = () => {
             const fetchedFiles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FileData));
             setRecentFiles(fetchedFiles);
         });
-        
+
         const notifsQuery = db.collection(`artifacts/${appId}/users/${user.uid}/notifications`).orderBy('createdAt', 'desc').limit(50);
         const unsubscribeNotifs = notifsQuery.onSnapshot(snapshot => {
             const fetchedNotifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
@@ -572,543 +569,381 @@ const App: React.FC = () => {
 
             const batch = db.batch();
             let hasNewBroadcasts = false;
-            
+
             broadcastSnapshot.docChanges().forEach((change) => {
-              if (change.type === 'added') {
-                const broadcastDoc = change.doc;
-                const broadcastId = broadcastDoc.id;
-                if (!existingBroadcastIds.has(broadcastId)) {
-                    const broadcastData = broadcastDoc.data() as BroadcastData;
-                    const newNotifRef = userNotifsRef.doc();
-                    batch.set(newNotifRef, {
-                        title: broadcastData.title,
-                        text: broadcastData.message,
-                        type: 'admin', read: false,
-                        createdAt: broadcastData.createdAt,
-                        broadcastId: broadcastId,
-                    });
-                    hasNewBroadcasts = true;
-                }
+              if (change.type === 'added' && !existingBroadcastIds.has(change.doc.id)) {
+                  const newBroadcast = change.doc.data() as BroadcastData;
+                  const newNotification: Notification = {
+                      id: `${change.doc.id}-${Date.now()}`,
+                      type: 'broadcast',
+                      title: newBroadcast.title,
+                      message: newBroadcast.message,
+                      createdAt: Timestamp.now() as unknown as FirebaseTimestamp, // Casting to FirebaseTimestamp
+                      read: false,
+                      broadcastId: change.doc.id,
+                      link: `/notifications?broadcastId=${change.doc.id}`
+                  };
+                  batch.set(userNotifsRef.doc(newNotification.id), newNotification);
+                  hasNewBroadcasts = true;
               }
             });
 
-            if (hasNewBroadcasts) await batch.commit();
-        });
-        
-        // Listen for feedback replies
-        const feedbackQuery = db.collection(`artifacts/${appId}/public/data/feedback`).where('userId', '==', user.uid);
-        const unsubscribeFeedback = feedbackQuery.onSnapshot(async (feedbackSnapshot) => {
-            const userNotifsRef = db.collection(`artifacts/${appId}/users/${user.uid}/notifications`);
-            const existingFeedbackNotifsQuery = userNotifsRef.where('feedbackId', '!=', null);
-            const existingNotifsSnapshot = await existingFeedbackNotifsQuery.get();
-            const existingFeedbackIds = new Set(existingNotifsSnapshot.docs.map(doc => doc.data().feedbackId));
-
-            const batch = db.batch();
-            let hasNewReplies = false;
-            feedbackSnapshot.docs.forEach(feedbackDoc => {
-                const feedbackData = feedbackDoc.data();
-                const feedbackId = feedbackDoc.id;
-                // Check if it's a replied message and we haven't notified the user yet
-                if(feedbackData.status === 'replied' && !existingFeedbackIds.has(feedbackId)){
-                    const newNotifRef = userNotifsRef.doc();
-                    batch.set(newNotifRef, {
-                        title: t('feedback_reply_notification_title'),
-                        text: t('feedback_reply_notification_text', { subject: feedbackData.subject }),
-                        type: 'feedback_reply', read: false,
-                        createdAt: Timestamp.now(),
-                        feedbackId: feedbackId, // Link to the feedback doc
-                    });
-                    hasNewReplies = true;
+            if (hasNewBroadcasts) {
+                try {
+                    await batch.commit();
+                } catch (error) {
+                    console.error("Error committing new broadcast notifications:", error);
                 }
-            });
-
-            if (hasNewReplies) await batch.commit();
+            }
         });
-
 
         return () => {
             unsubscribeEvents();
             unsubscribeFiles();
             unsubscribeNotifs();
             unsubscribeBroadcasts();
-            unsubscribeFeedback();
         };
+    }, [user, isAdmin, appId]); // Dependencies for data fetching
 
-    }, [user?.uid, isAdmin, t]);
-    
+    // Authentication and App status management
     useEffect(() => {
-        if (!user?.uid || !currentSubject || user.uid === 'guest-user') {
-            setAllSubjectFiles([]);
-            return;
-        }
-
-        const filesQuery = db.collection(`artifacts/${appId}/public/data/files`)
-          .where('ownerId', '==', user.uid)
-          .where('subject', '==', currentSubject)
-          .orderBy('createdAt', 'desc');
-
-        const unsubscribe = filesQuery.onSnapshot((snapshot) => {
-            const fetchedFiles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FileData));
-            setAllSubjectFiles(fetchedFiles);
-        }, (error) => {
-             console.error(`Error fetching files for subject ${currentSubject}:`, error);
-        });
-
-        return () => unsubscribe();
-    }, [user?.uid, currentSubject]);
-    
-    const subjectFiles = useMemo(() => {
-        if (searchQuery.trim() === '') return allSubjectFiles;
-        const lowerCaseQuery = searchQuery.toLowerCase();
-        return allSubjectFiles.filter(file => 
-            file.title.toLowerCase().includes(lowerCaseQuery) ||
-            (file.description && file.description.toLowerCase().includes(lowerCaseQuery))
-        );
-    }, [allSubjectFiles, searchQuery]);
-    
-    const handleProfileUpdate = useCallback(async (updatedData: Partial<AppUser>) => {
-        const currentUser = auth.currentUser;
-        if (!currentUser) return;
-        const uid = currentUser.uid;
-        
-        try {
-            const userDocRef = db.doc(`artifacts/${appId}/public/data/users/${uid}`);
-            await userDocRef.update(updatedData);
-        } catch (error) {
-            showAppModal({ text: t('error_save_settings_failed') });
-        }
-    }, [showAppModal, t]);
-
-    const handleAdminSettingsUpdate = useCallback(async (updatedData: Partial<AdminSettings>) => {
-        setAdminSettings(currentSettings => currentSettings ? { ...currentSettings, ...updatedData } : null);
-        try {
-            const settingsDocRef = db.doc(`artifacts/${appId}/public/data/adminSettings/global`);
-            await settingsDocRef.update(updatedData);
-        } catch (error) {
-            console.error("Failed to save admin settings", error);
-            showAppModal({ text: t('error_failed_to_save_admin_settings') });
-        }
-    }, [showAppModal, t]);
-
-    const handlePinDisableRequest = () => setIsPinVerificationModalOpen(true);
-    const handlePinDisableConfirm = () => {
-        handleAdminSettingsUpdate({ pinProtectionEnabled: false });
-        setIsPinVerificationModalOpen(false);
-    };
-
-    const handleProfilePicUpload = useCallback(async (file: File) => {
-        if (!user || user.uid === 'guest-user') {
-             showAppModal({ text: t('error_guest_action_not_allowed') });
-            return;
-        };
-        try {
-            const filePath = `profilePictures/${user.uid}/${Date.now()}-${file.name}`;
-            const storageRef = storage.ref(filePath);
-            await storageRef.put(file);
-            const url = await storageRef.getDownloadURL();
-            await handleProfileUpdate({ profilePictureUrl: url });
-            showAppModal({ text: t('profile_picture_upload_success') });
-        } catch (error) {
-            console.error("Profile picture upload error:", error);
-            showAppModal({ text: t('error_profile_pic_upload_failed') });
-        }
-    }, [user, showAppModal, t, handleProfileUpdate]);
-    
-    const cleanupUserData = async (uid: string) => {
-        const batchDelete = async (q: any) => {
-            const snapshot = await q.get();
-            if (snapshot.size === 0) return;
-            const batch = db.batch();
-            snapshot.docs.forEach(doc => batch.delete(doc.ref));
-            await batch.commit();
-        };
-    
-        // Delete user files from storage and firestore
-        const filesQuery = db.collection(`artifacts/${appId}/public/data/files`).where('ownerId', '==', uid);
-        const filesSnapshot = await filesQuery.get();
-        if (!filesSnapshot.empty) {
-            const deletePromises = filesSnapshot.docs.map(doc => {
-                const fileData = doc.data() as FileData;
-                if (fileData.storagePath) {
-                    return storage.ref(fileData.storagePath).delete().catch(err => console.error(`Failed to delete storage file:`, err));
-                }
-                return Promise.resolve();
-            });
-            await Promise.all(deletePromises);
-            await batchDelete(filesQuery);
-        }
-    
-        // Delete all private user collections
-        const userRoot = `artifacts/${appId}/users/${uid}`;
-        const collectionsToDelete = ['calendarEvents', 'notes', 'tasks', 'notifications'];
-        for (const coll of collectionsToDelete) {
-            await batchDelete(db.collection(`${userRoot}/${coll}`));
-        }
-    
-        // Special handling for flashcard decks (with subcollections)
-        const decksRef = db.collection(`${userRoot}/flashcardDecks`);
-        const decksSnapshot = await decksRef.get();
-        if (!decksSnapshot.empty) {
-            for (const deckDoc of decksSnapshot.docs) {
-                await batchDelete(deckDoc.ref.collection('cards'));
-                await deckDoc.ref.delete();
-            }
-        }
-    
-        // Delete user's feedback
-        await batchDelete(db.collection(`artifacts/${appId}/public/data/feedback`).where('userId', '==', uid));
-    };
-
-    const handleCleanupAccount = async () => {
-        const currentUser = auth.currentUser;
-        if (!currentUser) return;
-        
-        showAppModal({ text: t('cleanup_account_progress'), confirmAction: undefined, cancelAction: undefined });
-
-        try {
-            await cleanupUserData(currentUser.uid);
-            showAppModal({ text: t('success_account_cleaned') });
-            // Reset local state if necessary
-            setRecentFiles([]);
-            setUserEvents([]);
-            setAllSubjectFiles([]);
-            setNotifications([]);
-        } catch (error) {
-            console.error("Account cleanup failed:", error);
-            showAppModal({ text: t('error_account_cleanup_failed')});
-        } finally {
-            setIsCleanupReauthModalOpen(false);
-        }
-    };
-    
-    const deleteUserData = async (uid: string) => {
-        await cleanupUserData(uid); // Use the same cleanup logic
-        await db.doc(`artifacts/${appId}/public/data/users/${uid}`).delete(); // Then delete the user doc
-    };
-
-    const handleDeleteAccount = async () => {
-        const currentUser = auth.currentUser;
-        if (!currentUser) return;
-        
-        showAppModal({ text: t('deleting_account_progress'), confirmAction: undefined, cancelAction: undefined });
-
-        try {
-            await deleteUserData(currentUser.uid);
-            await deleteUser(currentUser);
-            showAppModal({ text: t('success_account_deleted') });
-        } catch (error) {
-            console.error("Account deletion failed:", error);
-            showAppModal({ text: t('error_account_deletion_failed')});
-        } finally {
-            setIsReauthModalOpen(false);
-        }
-    };
-
-
-    // Main authentication and profile loading effect
-    useEffect(() => {
-        let profileUnsubscribe: Unsubscribe | undefined;
-
-        const authSubscriber = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (profileUnsubscribe) profileUnsubscribe();
-            setAppStatus('initializing');
-
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
-                if (firebaseUser.email === 'admin1069@gmail.com') {
-                    setIsAdmin(true);
-                    
-                    const tempAdminUser = {
-                        uid: firebaseUser.uid,
-                        email: firebaseUser.email,
-                        userName: 'Admin',
-                        profilePictureUrl: `https://ui-avatars.com/api/?name=A&background=9333ea&color=fff`,
-                        isAdmin: true,
-                    } as AppUser;
-                    setUser(tempAdminUser);
-                    
-                    const adminSettingsRef = db.doc(`artifacts/${appId}/public/data/adminSettings/global`);
-                    profileUnsubscribe = adminSettingsRef.onSnapshot(async (docSnap) => {
-                        if (docSnap.exists) {
-                            setAdminSettings(docSnap.data() as AdminSettings);
-                        } else {
-                            const defaultAdminSettings: AdminSettings = { themePreference: 'purple', pinProtectionEnabled: true, fontPreference: 'inter' };
-                            await adminSettingsRef.set(defaultAdminSettings);
-                            setAdminSettings(defaultAdminSettings);
-                        }
-                        setAppStatus('authenticated');
-                    }, (error) => {
-                        console.error("Fatal Admin Settings Load Error:", error);
-                        showAppModal({ text: t('error_admin_login_failed') });
-                        signOut(auth);
-                        setAppStatus('unauthenticated');
-                    });
-                    return;
-                }
-                
-                if (!firebaseUser.emailVerified && !verificationSkipped) {
-                    const tempUser = {
-                        uid: firebaseUser.uid,
-                        email: firebaseUser.email || '',
-                        userName: firebaseUser.displayName || t('guest_fallback_name'),
-                    } as AppUser;
-                    setUser(tempUser);
-                    setAppStatus('awaiting-verification');
-                    return;
-                }
+                // Fetch AppUser data from Firestore
+                const userDocRef = db.doc(`artifacts/${appId}/users/${firebaseUser.uid}`);
+                const userDoc = await userDocRef.get();
+                if (userDoc.exists) {
+                    const appUser = userDoc.data() as AppUser;
+                    setUser({ ...appUser, uid: firebaseUser.uid });
 
-                setIsAdmin(false);
-                const userDocRef = db.doc(`artifacts/${appId}/public/data/users/${firebaseUser.uid}`);
-                profileUnsubscribe = userDocRef.onSnapshot(async (docSnap) => {
-                    if (docSnap.exists) {
-                        const userData = docSnap.data() as AppUser;
-                        if (userData.disabled) {
-                            await signOut(auth);
-                            showAppModal({ text: t('error_account_disabled') });
-                            setAppStatus('unauthenticated');
-                            return;
-                        }
-
-                        const profileUpdate: Partial<AppUser> = {};
-
-                        // Check and update email verification status
-                        if (firebaseUser.emailVerified && !userData.isVerifiedByEmail) {
-                            profileUpdate.isVerifiedByEmail = true;
-                        }
-                        
-                        // Check and update login streak
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        const lastLogin = (userData.lastLoginDate as FirebaseTimestamp)?.toDate();
-                        if(lastLogin) lastLogin.setHours(0, 0, 0, 0);
-
-                        if (!lastLogin || lastLogin.getTime() < today.getTime()) {
-                            const yesterday = new Date(today);
-                            yesterday.setDate(yesterday.getDate() - 1);
-                            let newStreak = userData.streakCount || 0;
-                            if(lastLogin && lastLogin.getTime() === yesterday.getTime()){
-                                newStreak++;
-                            } else {
-                                if (newStreak > 0) {
-                                    const notifRef = db.collection(`artifacts/${appId}/users/${firebaseUser.uid}/notifications`).doc();
-                                    await notifRef.set({
-                                        title: t('streak_lost_notification_title'),
-                                        text: t('streak_lost_notification_text', { count: newStreak }),
-                                        type: 'streak', read: false, createdAt: Timestamp.now()
-                                    });
-                                }
-                                newStreak = 1;
-                            }
-                            profileUpdate.streakCount = newStreak;
-                            profileUpdate.lastLoginDate = Timestamp.fromDate(today);
-                        }
-
-                        if (Object.keys(profileUpdate).length > 0) {
-                           await userDocRef.update(profileUpdate);
-                        }
-
-                        const finalUser: AppUser = {
-                            ...userData,
-                            ...profileUpdate,
-                            uid: firebaseUser.uid,
-                            email: userData.email || firebaseUser.email || '',
-                            userName: userData.userName || 'Gebruiker',
-                            profilePictureUrl: userData.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.userName || 'S')}&background=random&color=fff`,
-                        };
-                        setUser(finalUser);
-
-                    } else { // New user document needs to be created
-                        const finalUser: AppUser = {
-                            uid: firebaseUser.uid,
-                            email: firebaseUser.email || '',
-                            userName: firebaseUser.displayName || t('guest_fallback_name'),
-                            profilePictureUrl: firebaseUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(firebaseUser.displayName || 'S')}&background=random&color=fff`,
-                            createdAt: Timestamp.now(), selectedSubjects: [], customSubjects: [], schoolName: '',
-                            className: '', educationLevel: '',
-                            languagePreference: (localStorage.getItem('appLanguage') as 'nl' | 'en') || 'nl',
-                            themePreference: localStorage.getItem('themeColor') || 'emerald',
-                            fontPreference: 'inter', homeLayout: defaultHomeLayout, streakCount: 1,
-                            lastLoginDate: Timestamp.now(), notificationsEnabled: true, disabled: false,
-                            isVerifiedByEmail: firebaseUser.emailVerified,
-                        };
-                        await userDocRef.set(finalUser, { merge: true });
-                        setUser(finalUser);
+                    // Check if intro has been seen
+                    let introSeen = false;
+                    try {
+                        introSeen = localStorage.getItem('schoolmaps_intro_seen') === 'true';
+                    } catch (error) {
+                        console.error("Could not read localStorage item:", error);
                     }
+                    if (!introSeen) {
+                        setShowIntro(true);
+                    }
+                    setIntroChecked(true); // Mark intro check as complete
+
+                    // Admin check
+                    if (appUser.role === 'admin') {
+                        setIsAdmin(true);
+                        // Fetch admin settings
+                        const adminSettingsDoc = await db.doc(`artifacts/${appId}/public/data/adminSettings`).get();
+                        if (adminSettingsDoc.exists) {
+                            setAdminSettings(adminSettingsDoc.data() as AdminSettings);
+                        }
+                    }
+
+                    if (!firebaseUser.emailVerified && appUser.provider === 'password' && !verificationSkipped) {
+                        setAppStatus('awaiting-verification');
+                    } else {
+                        setAppStatus('authenticated');
+                    }
+                } else {
+                    // This case should ideally not happen if user creation flow is robust
+                    // but as a fallback, set a basic user and log it.
+                    setUser({ uid: firebaseUser.uid, email: firebaseUser.email || 'unknown', role: 'user' });
                     setAppStatus('authenticated');
-                }, (error) => {
-                    console.error("Firestore profile snapshot error:", error);
-                    showAppModal({ text: t('error_profile_load_failed') });
-                    setAppStatus('unauthenticated');
-                });
-            } else {
-                sessionStorage.removeItem('schoolmaps_verification_skipped');
-                setVerificationSkipped(false);
-                setUser(null);
-                setIsAdmin(false);
-                setAdminSettings(null);
-                if (sessionStorage.getItem('logout-event') === 'true') {
-                    showAppModal({ text: t('success_logout') });
-                    sessionStorage.removeItem('logout-event');
+                    console.warn('AppUser document not found for', firebaseUser.uid, 'using basic user data.');
                 }
+            } else {
+                setUser(null);
                 setAppStatus('unauthenticated');
+                setIsAdmin(false);
+                setIsPinVerified(false);
+                setAdminSettings(null);
+                setIntroChecked(true); // Ensure intro check is marked complete even if unauthenticated
             }
         });
 
-        return () => {
-            authSubscriber();
-            if (profileUnsubscribe) profileUnsubscribe();
-        };
-    }, [showAppModal, t, verificationSkipped]);
+        // Cleanup listener on component unmount
+        return () => unsubscribe();
+    }, [appId, verificationSkipped]);
 
-    // Effect to sync user preferences to app state
-    useEffect(() => {
-        if (user && !isAdmin) {
-            if (user.themePreference && user.themePreference !== themeColor) {
-                setThemeColor(user.themePreference);
-            }
-            if (user.languagePreference && user.languagePreference !== language) {
-                setLanguage(user.languagePreference);
-            }
-            if (user.fontPreference && user.fontPreference !== fontFamily) {
-                setFontFamily(user.fontPreference);
-            }
-        } else if (isAdmin && adminSettings) {
-             if (adminSettings.themePreference && adminSettings.themePreference !== themeColor) {
-                setThemeColor(adminSettings.themePreference);
-            }
-             if (adminSettings.fontPreference && adminSettings.fontPreference !== fontFamily) {
-                setFontFamily(adminSettings.fontPreference);
-            }
-        }
-    }, [user, isAdmin, adminSettings]);
 
-    const copyTextToClipboard = useCallback((text: string, title: string = '') => {
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(text).then(() => {
-                 showAppModal({ text: t('share_link_copied', { title }) });
-            }).catch(() => {
-                 showAppModal({ text: t('error_copy_share_link') });
-            });
-            return true;
+    // Function to handle profile picture upload
+    const handleProfilePicUpload = useCallback(async (file: File) => {
+        if (!user?.uid) {
+            showAppModal({ text: t('error_not_logged_in') });
+            return;
         }
-        return false;
-    }, [showAppModal, t]);
-    
-    useEffect(() => {
+
+        const storageRef = storage.ref();
+        const fileRef = storageRef.child(`users/${user.uid}/profilePictures/${file.name}`);
+
         try {
-            const introSeen = localStorage.getItem('schoolmaps_intro_seen');
-            if (introSeen !== 'true') {
-                setShowIntro(true);
+            await fileRef.put(file);
+            const photoURL = await fileRef.getDownloadURL();
+
+            await db.doc(`artifacts/${appId}/users/${user.uid}`).update({ photoURL });
+            setUser(prevUser => (prevUser ? { ...prevUser, photoURL } : null));
+            showAppModal({ text: t('profile_picture_updated') });
+        } catch (error) {
+            console.error("Error uploading profile picture:", error);
+            showAppModal({ text: t('error_upload_failed') });
+        }
+    }, [user, showAppModal, t, appId]);
+
+    // Function to update user profile (e.g., display name, language, theme)
+    const onProfileUpdate = useCallback(async (updatedData: Partial<AppUser>) => {
+        if (!user?.uid) return;
+        try {
+            await db.doc(`artifacts/${appId}/users/${user.uid}`).update(updatedData);
+            setUser(prevUser => (prevUser ? { ...prevUser, ...updatedData } : null));
+            showAppModal({ text: t('profile_updated_success') });
+
+            if (updatedData.language) {
+                setLanguage(updatedData.language as 'nl' | 'en');
+                localStorage.setItem('appLanguage', updatedData.language);
+            }
+            if (updatedData.themeColor) {
+                setThemeColor(updatedData.themeColor);
+                localStorage.setItem('themeColor', updatedData.themeColor);
+            }
+            if (updatedData.fontFamily) {
+                setFontFamily(updatedData.fontFamily);
+                localStorage.setItem('fontFamily', updatedData.fontFamily);
             }
         } catch (error) {
-            setShowIntro(false);
-        } finally {
-            setIntroChecked(true);
+            console.error("Error updating profile:", error);
+            showAppModal({ text: t('error_profile_update_failed') });
         }
+    }, [user, showAppModal, t, appId, setLanguage, setThemeColor, setFontFamily]);
+
+    // Function to handle account deletion request
+    const onDeleteAccountRequest = useCallback(() => {
+        setIsReauthModalOpen(true);
     }, []);
 
-    const appFontFamily = isAdmin ? (adminSettings?.fontPreference || 'inter') : fontFamily;
-    // Determine the font class based on auth status. Default to 'inter' for unauthenticated views (login, intro, etc.).
-    const activeFontClass = appStatus === 'authenticated' ? (fontClasses[appFontFamily] || 'font-inter') : 'font-inter';
-    const appContainerClasses = `min-h-screen ${activeFontClass} antialiased`;
+    const handleDeleteAccount = useCallback(async () => {
+        const currentUser = auth.currentUser;
+        if (!currentUser) return;
 
-    const authContainerClasses = (appStatus === 'unauthenticated' || appStatus === 'initializing' || appStatus === 'awaiting-verification' || (showIntro && !user) ) ? getAuthThemeClasses('bg') : '';
+        try {
+            // Delete user data from Firestore
+            const userDocRef = db.doc(`artifacts/${appId}/users/${currentUser.uid}`);
+            await userDocRef.delete();
 
-    const mainAppLayoutProps = { user, t, getThemeClasses, showAppModal, closeAppModal, tSubject, copyTextToClipboard, setIsProfilePicModalOpen, language, setLanguage, themeColor, setThemeColor, fontFamily, setFontFamily, handleLogout, handleGoHome, currentView, setCurrentView, currentSubject, setCurrentSubject, subjectFiles, searchQuery, setSearchQuery, userEvents, recentFiles, onProfileUpdate: handleProfileUpdate, onDeleteAccountRequest: () => setIsReauthModalOpen(true), onCleanupAccountRequest: () => setIsCleanupReauthModalOpen(true), notifications, unreadCount, showBroadcast: showBroadcastModal, focusMinutes, setFocusMinutes, breakMinutes, setBreakMinutes, timerMode, setTimerMode, timeLeft, setTimeLeft, isTimerActive, setIsTimerActive, selectedTaskForTimer, setSelectedTaskForTimer};
-    
-    const isLoading = !isAppReadyForDisplay || !isMinLoadingTimePassed;
+            // Delete user account from Firebase Auth
+            await deleteUser(currentUser);
+            showAppModal({ text: t('account_deleted_success') });
+            handleLogout(); // Log out and reset app state
+        } catch (error) {
+            console.error("Error deleting account:", error);
+            showAppModal({ text: t('error_account_delete_failed') });
+        }
+    }, [appId, handleLogout, showAppModal, t]);
 
-    return (
-        <div className={`${appContainerClasses} ${authContainerClasses}`}>
-             <OfflineIndicator isOnline={isOnline} t={t} />
-             <style>{`
-                 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-                 @keyframes fadeInSlower { from { opacity: 0; } to { opacity: 1; } }
-                 .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
-                 .animate-fade-in-slow { animation: fadeInSlower 0.5s ease-out forwards; }
-             `}</style>
-            {modalContent && <CustomModal {...{ ...modalContent, onClose: closeAppModal, t, getThemeClasses }} />}
-            <BroadcastModal isOpen={isBroadcastModalOpen} onClose={() => setIsBroadcastModalOpen(false)} broadcast={selectedBroadcast} t={t} getThemeClasses={getThemeClasses} />
-            <ReauthModal isOpen={isReauthModalOpen} onClose={() => setIsReauthModalOpen(false)} onSuccess={handleDeleteAccount} t={t} getThemeClasses={getThemeClasses} />
-            <ReauthModal
-                isOpen={isCleanupReauthModalOpen}
-                onClose={() => setIsCleanupReauthModalOpen(false)}
-                onSuccess={handleCleanupAccount}
-                t={t}
-                getThemeClasses={getThemeClasses}
-                title={t('reauth_modal_title_cleanup')}
-                description={t('reauth_modal_description_cleanup')}
-                confirmButtonText={t('confirm_cleanup_account_button')}
-                confirmButtonColor="bg-orange-600 hover:bg-orange-700"
-            />
-            <UserDetailModal isOpen={isUserDetailModalOpen} onClose={() => setIsUserDetailModalOpen(false)} user={selectedUserForDetail} {...{t, tSubject, getThemeClasses, showAppModal}} />
-            <PinVerificationModal isOpen={isPinVerificationModalOpen} onClose={() => setIsPinVerificationModalOpen(false)} onSuccess={handlePinDisableConfirm} t={t} getThemeClasses={getThemeClasses} />
-            
-            {isLoading && <LoadingScreen getThemeClasses={getAuthThemeClasses} />}
-            
-            {!isLoading && (
-              <>
-                {appStatus === 'awaiting-verification' && user && (
-                     <EmailVerificationView 
-                        user={user}
-                        t={t}
-                        getThemeClasses={getAuthThemeClasses}
-                        handleLogout={handleLogout}
-                        onSkip={handleSkipVerification}
-                     />
-                )}
+    // Function to handle account cleanup request
+    const onCleanupAccountRequest = useCallback(() => {
+        setIsCleanupReauthModalOpen(true);
+    }, []);
 
-                {appStatus === 'unauthenticated' && introChecked && (
-                    showIntro ? (
-                        <IntroTutorialView
-                            onFinish={handleIntroFinish}
-                            t={t}
-                            getThemeClasses={getAuthThemeClasses}
-                        />
-                    ) : (
-                        <AuthView {...{ showAppModal, t, getThemeClasses: getAuthThemeClasses, tSubject }} />
-                    )
-                )}
-                
-                {appStatus === 'authenticated' && user && (
-                     isAdmin && adminSettings ? (
-                        adminSettings.pinProtectionEnabled && !isPinVerified ? (
-                            <AdminPinView 
-                                user={user}
-                                onSuccess={() => setIsPinVerified(true)}
-                                t={t}
-                                getThemeClasses={getThemeClasses}
-                            />
-                        ) : (
-                            <AdminView 
-                                user={user} 
-                                t={t} 
-                                handleLogout={handleLogout} 
-                                getThemeClasses={getThemeClasses} 
-                                showAppModal={showAppModal} 
-                                tSubject={tSubject} 
-                                onUserClick={handleUserDetailClick}
-                                adminSettings={adminSettings}
-                                onAdminSettingsUpdate={handleAdminSettingsUpdate}
-                                onPinDisableRequest={handlePinDisableRequest}
-                             />
-                        )
-                     ) : user && !isAdmin ? (
-                        <>
-                            <MainAppLayout {...mainAppLayoutProps} />
-                            <ProfilePicModal 
-                                isOpen={isProfilePicModalOpen} 
-                                onClose={() => setIsProfilePicModalOpen(false)}
-                                t={t}
-                                getThemeClasses={getThemeClasses}
-                                handleProfilePicUpload={handleProfilePicUpload}
-                            />
-                        </>
-                    ) : <LoadingScreen getThemeClasses={getAuthThemeClasses}/>
-                )}
-            </>
-            )}
-        </div>
-    );
+    const handleCleanupAccount = useCallback(async () => {
+        const currentUser = auth.currentUser;
+        if (!currentUser?.uid) return;
+
+        showAppModal({
+            text: t('confirm_cleanup_account'),
+            confirmAction: async () => {
+                try {
+                    // Logic to delete specific user data, leaving the account intact
+                    // Example: delete all files owned by the user
+                    const filesToDeleteQuery = db.collection(`artifacts/${appId}/public/data/files`).where('ownerId', '==', currentUser.uid);
+                    const filesSnapshot = await filesToDeleteQuery.get();
+                    const batch = db.batch();
+                    filesSnapshot.docs.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+
+                    // Example: clear calendar events
+                    const eventsToDeleteQuery = db.collection(`artifacts/${appId}/users/${currentUser.uid}/calendarEvents`);
+                    const eventsSnapshot = await eventsToDeleteQuery.get();
+                    const eventsBatch = db.batch();
+                    eventsSnapshot.docs.forEach(doc => {
+                        eventsBatch.delete(doc.ref);
+                    });
+                    await eventsBatch.commit();
+
+
+                    showAppModal({ text: t('account_cleanup_success') });
+                } catch (error) {
+                    console.error("Error cleaning up account:", error);
+                    showAppModal({ text: t('error_account_cleanup_failed') });
+                }
+            },
+            cancelAction: () => {}
+        });
+    }, [appId, showAppModal, t]);
+
+    // Utility function for copying text to clipboard
+    const copyTextToClipboard = useCallback((text: string, title?: string): boolean => {
+        try {
+            document.execCommand('copy');
+            showAppModal({
+                text: title ? t('copied_to_clipboard_with_title', { title }) : t('copied_to_clipboard'),
+                type: 'info'
+            });
+            return true;
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+            showAppModal({
+                text: t('error_copy_to_clipboard'),
+                type: 'error'
+            });
+            return false;
+        }
+    }, [showAppModal, t]);
+
+
+    // Conditional rendering based on app status and loading
+    if (!isAppReadyForDisplay || !isMinLoadingTimePassed) {
+        return <LoadingScreen getThemeClasses={getThemeClasses} />;
+    }
+
+    // Render AuthView if unauthenticated
+    if (appStatus === 'unauthenticated') {
+        return (
+            <div className={`h-screen flex items-center justify-center ${fontClasses[fontFamily]} ${getAuthThemeClasses('bg-light')}`}>
+                <AuthView {...{ t, getThemeClasses: getAuthThemeClasses, showAppModal }} />
+                <CustomModal content={modalContent} onClose={closeAppModal} getThemeClasses={getThemeClasses} t={t} />
+            </div>
+        );
+    }
+
+    // Render EmailVerificationView if authenticated but email not verified
+    if (appStatus === 'awaiting-verification' && user) {
+        return (
+            <div className={`h-screen flex items-center justify-center ${fontClasses[fontFamily]} ${getThemeClasses('bg-light')}`}>
+                <EmailVerificationView {...{ user, t, getThemeClasses, showAppModal, handleLogout, handleSkipVerification }} />
+                <CustomModal content={modalContent} onClose={closeAppModal} getThemeClasses={getThemeClasses} t={t} />
+            </div>
+        );
+    }
+
+    // Render IntroTutorialView for new authenticated users
+    if (showIntro && user) {
+        return (
+            <div className={`h-screen flex flex-col ${fontClasses[fontFamily]} ${getThemeClasses('bg-light')}`}>
+                <IntroTutorialView {...{ user, t, getThemeClasses, handleIntroFinish }} />
+                <CustomModal content={modalContent} onClose={closeAppModal} getThemeClasses={getThemeClasses} t={t} />
+            </div>
+        );
+    }
+
+    // Render AdminPinView if admin but not yet pin verified
+    if (isAdmin && user && adminSettings?.adminPin && !isPinVerified) {
+        return (
+            <div className={`h-screen flex items-center justify-center ${fontClasses[fontFamily]} ${getThemeClasses('bg-light')}`}>
+                <AdminPinView {...{ user, t, getThemeClasses, showAppModal, handleLogout, setIsPinVerified, adminSettings }} />
+                <CustomModal content={modalContent} onClose={closeAppModal} getThemeClasses={getThemeClasses} t={t} />
+            </div>
+        );
+    }
+
+    // Render AdminView if admin and pin verified
+    if (isAdmin && user && isPinVerified) {
+        return (
+            <div className={`${fontClasses[fontFamily]} ${getThemeClasses('bg-light')}`}>
+                <AdminView {...{ user, t, getThemeClasses, showAppModal, handleLogout, setCurrentView, currentView, isAdmin, adminSettings, onProfileUpdate, handleUserDetailClick, showBroadcastModal }} />
+                <CustomModal content={modalContent} onClose={closeAppModal} getThemeClasses={getThemeClasses} t={t} />
+                <BroadcastModal isOpen={isBroadcastModalOpen} onClose={() => setIsBroadcastModalOpen(false)} t={t} getThemeClasses={getThemeClasses} selectedBroadcast={selectedBroadcast} user={user} />
+                <UserDetailModal isOpen={isUserDetailModalOpen} onClose={() => setIsUserDetailModalOpen(false)} t={t} getThemeClasses={getThemeClasses} user={selectedUserForDetail} showAppModal={showAppModal} />
+                <PinVerificationModal isOpen={isPinVerificationModalOpen} onClose={() => setIsPinVerificationModalOpen(false)} t={t} getThemeClasses={getThemeClasses} userId={user.uid} showAppModal={showAppModal} />
+            </div>
+        );
+    }
+
+    // Render MainAppLayout for authenticated users
+    if (user) {
+        return (
+            <div className={`${fontClasses[fontFamily]} ${getThemeClasses('bg-light')}`}>
+                <MainAppLayout {...{
+                    user,
+                    t,
+                    tSubject,
+                    getThemeClasses,
+                    showAppModal,
+                    closeAppModal,
+                    copyTextToClipboard,
+                    setIsProfilePicModalOpen,
+                    handleLogout,
+                    currentView,
+                    setCurrentView,
+                    currentSubject,
+                    setCurrentSubject,
+                    handleGoHome,
+                    subjectFiles: allSubjectFiles, // allSubjectFiles wordt gefilterd in HomeView
+                    searchQuery,
+                    setSearchQuery,
+                    userEvents,
+                    recentFiles,
+                    language,
+                    setLanguage,
+                    themeColor,
+                    setThemeColor,
+                    fontFamily,
+                    setFontFamily,
+                    onProfileUpdate,
+                    onDeleteAccountRequest,
+                    onCleanupAccountRequest,
+                    notifications,
+                    unreadCount,
+                    showBroadcast: showBroadcastModal,
+                    focusMinutes,
+                    setFocusMinutes,
+                    breakMinutes,
+                    setBreakMinutes,
+                    timerMode,
+                    setTimerMode,
+                    timeLeft,
+                    setTimeLeft,
+                    isTimerActive,
+                    setIsTimerActive,
+                    selectedTaskForTimer,
+                    setSelectedTaskForTimer,
+                }} />
+                <CustomModal content={modalContent} onClose={closeAppModal} getThemeClasses={getThemeClasses} t={t} />
+                <ProfilePicModal
+                    isOpen={isProfilePicModalOpen}
+                    onClose={() => setIsProfilePicModalOpen(false)}
+                    t={t}
+                    getThemeClasses={getThemeClasses}
+                    handleProfilePicUpload={handleProfilePicUpload}
+                />
+                <ReauthModal
+                    isOpen={isReauthModalOpen}
+                    onClose={() => setIsReauthModalOpen(false)}
+                    onSuccess={handleDeleteAccount}
+                    t={t}
+                    getThemeClasses={getThemeClasses}
+                    title={t('confirm_delete_account_title')}
+                    description={t('confirm_delete_account_description')}
+                    confirmButtonText={t('delete_account_button')}
+                />
+                <ReauthModal
+                    isOpen={isCleanupReauthModalOpen}
+                    onClose={() => setIsCleanupReauthModalOpen(false)}
+                    onSuccess={handleCleanupAccount}
+                    t={t}
+                    getThemeClasses={getThemeClasses}
+                    title={t('confirm_cleanup_account_title')}
+                    description={t('confirm_cleanup_account_description')}
+                    confirmButtonText={t('cleanup_account_button')}
+                    confirmButtonColor="bg-blue-600 hover:bg-blue-700"
+                />
+                <BroadcastModal isOpen={isBroadcastModalOpen} onClose={() => setIsBroadcastModalOpen(false)} t={t} getThemeClasses={getThemeClasses} selectedBroadcast={selectedBroadcast} user={user} />
+                <OfflineIndicator isOnline={isOnline} t={t} getThemeClasses={getThemeClasses} />
+            </div>
+        );
+    }
+
+    return null; // Should not reach here if appStatus is handled correctly
 };
 
 export default App;
